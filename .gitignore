@@ -1,0 +1,5 @@
+cfg/
+compile.sh
+*.gb
+*.o
+*.swp
