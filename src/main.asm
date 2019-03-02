@@ -1,3 +1,12 @@
+include "lib/gbhw.inc"		; hardware descriptions
+include "src/optim.inc"		; optimized instruction aliases
+
+include "src/interrupts.asm"
+
+section "entry",ROM0[$100]
+    nop
+    jp start
+
 ; HIRAM locations
 PU1_CH1_DIV_LO      equ $80
 PU1_CH1_DIV_HI      equ $81
@@ -8,23 +17,7 @@ PU1_CH2_DIV_HI      equ $85
 PU1_CH2_STATE_LO    equ $86
 PU1_CH2_STATE_HI    equ $87
 
-    section "vblank_intvec",ROM0[$0040]
-
-    reti
-
-
-    section "timer_intvec",ROM0[$0050]
-    
-    jp update_sound
-
-
-    section "entry_point",ROM0[$0100]
-    
-    nop
-    jp start
-
-
-    section "main",ROM0[$0150]
+section "main",ROM0[$0150]
 
 start
     di
@@ -140,3 +133,5 @@ update_sound                        ; calculate next sound frame
     pop de
     pop hl
     reti
+
+; vim: se ft=rgbds:

@@ -1,6 +1,4 @@
-cfg/
-compile.sh
+*.sym
 *.gb
 *.o
-*.swp
-*.sym
+*.2bpp
