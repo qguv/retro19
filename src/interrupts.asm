@@ -8,7 +8,6 @@ LCD_VECT:
 
 section "Timer IRQ Vector",ROM0[$50]
 TIMER_VECT:
-    jp update_sound
 	reti
 
 section "Serial IRQ Vector",ROM0[$58]
