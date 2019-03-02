@@ -24,7 +24,7 @@ includes := $(PYTHON2) $(EXTRASDIR)/pokemontools/scan_includes.py
 
 VPATH = $(SRCDIR) $(LIBDIR) $(SPRITEDIR)
 
-all: $(OBJDIR)/star.2bpp $(OUTDIR)/main.gb
+all: $(OUTDIR)/main.gb
 
 %.asm: ;
 
