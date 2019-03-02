@@ -1,12 +1,12 @@
 ; HIRAM locations
-PU1_CH1_STATE_LO    equ $80
-PU1_CH1_STATE_HI    equ $81
-PU1_CH1_DIV_LO      equ $82
-PU1_CH1_DIV_HI      equ $83
-PU1_CH2_STATE_LO    equ $84
-PU1_CH2_STATE_HI    equ $85
-PU1_CH2_DIV_LO      equ $86
-PU1_CH2_DIV_HI      equ $87
+PU1_CH1_DIV_LO      equ $80
+PU1_CH1_DIV_HI      equ $81
+PU1_CH1_STATE_LO    equ $82
+PU1_CH1_STATE_HI    equ $83
+PU1_CH2_DIV_LO      equ $84
+PU1_CH2_DIV_HI      equ $85
+PU1_CH2_STATE_LO    equ $86
+PU1_CH2_STATE_HI    equ $87
 
     section "vblank_intvec",ROM0[$0040]
 
@@ -69,6 +69,9 @@ init_interrupts
     dec a
     ldh [$07],a                     ; input clock = 4096 Hz, start timer
     ei
+    nop                             ; should not halt immediately after ei?
+                                    ; also clearing intflags here would be
+                                    ; safer
 
 wait_loop                           ; idle loop waiting for next int
     halt
@@ -81,14 +84,22 @@ update_sound                        ; calculate next sound frame
     push bc
     push af
 
-    ldh a,[PU1_CH1_STATE_LO]        ; PU1_CH1_STATE += PU1_CH1_DIV
+    ld hl,PU1_CH1_DIV_LO + $ff00
+    ld e,[hl]
+    inc l
+    ld d,[hl]
+    inc l
+    ld a,[hl+]
+    ld h,[hl]
     ld l,a
-    ldh a,[PU1_CH1_STATE_HI]
-    ld h,a
-    ldh a,[PU1_CH1_DIV_LO]
-    ld e,a
-    ldh a,[PU1_CH1_DIV_HI]
-    ld d,a
+;    ldh a,[PU1_CH1_STATE_LO]        ; PU1_CH1_STATE += PU1_CH1_DIV
+;    ld l,a
+;    ldh a,[PU1_CH1_STATE_HI]
+;    ld h,a
+;    ldh a,[PU1_CH1_DIV_LO]
+;    ld e,a
+;    ldh a,[PU1_CH1_DIV_HI]
+;    ld d,a
     add hl,de
     ld c,h                          ; C = PU1_CH1_STATE_hi
     ld a,h
@@ -96,14 +107,22 @@ update_sound                        ; calculate next sound frame
     ld a,l
     ldh [PU1_CH1_STATE_LO],a
 
-    ldh a,[PU1_CH2_STATE_LO]        ; PU1_CH2_STATE += PU1_CH2_DIV
+    ld hl,PU1_CH2_DIV_LO + $ff00
+    ld e,[hl]
+    inc l
+    ld d,[hl]
+    inc l
+    ld a,[hl+]
+    ld h,[hl]
     ld l,a
-    ldh a,[PU1_CH2_STATE_HI]
-    ld h,a
-    ldh a,[PU1_CH2_DIV_LO]
-    ld e,a
-    ldh a,[PU1_CH2_DIV_HI]
-    ld d,a
+;    ldh a,[PU1_CH2_STATE_LO]        ; PU1_CH2_STATE += PU1_CH2_DIV
+;    ld l,a
+;    ldh a,[PU1_CH2_STATE_HI]
+;    ld h,a
+;    ldh a,[PU1_CH2_DIV_LO]
+;    ld e,a
+;    ldh a,[PU1_CH2_DIV_HI]
+;    ld d,a
     add hl,de
     ld a,l
     ldh [PU1_CH2_STATE_LO],a
