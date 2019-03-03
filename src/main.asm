@@ -73,23 +73,24 @@ ANGLE = ANGLE + 4096.0                  ; circle has 65536.0 degrees, sin range 
 ; global audio settings
     ld a,$80                            ; turn audio on globally
     ld [rAUDENA],a
-    ld a,$44                            ; WAV channel output
+    ld a,$44                            ; WAV channel output on
     ld [rAUDTERM],a
     ld a,$77                            ; master volume max
     ld [rAUDVOL],a
 
-    ld l,$40                              ; l is a counter to dec samples
+    ld l,$40                            ; l is a counter to dec samples
     ld h,a                              ; h is unused here
     push hl
 
 copy_wave
-    ldz                                 ; WAV channel off
-    ld [rAUD3ENA],a
-
     dec l                               ; ++l, do we need to decrease volume?
-    jr nz,.do_copy
+    jr nz,begin_wait_loop
     call z,decrease_wave_volume
     ld l,$10
+
+    ldz
+    ld [rAUDTERM],a                     ; WAV channel output off
+    ld [rAUD3ENA],a                     ; WAV channel off
 
 ; copy from wave buffer to wave sample io registers
 .do_copy
@@ -109,6 +110,8 @@ copy_wave
 
     ld a,$80                            ; WAV channel on
     ld [rAUD3ENA],a
+    ld a,$44                            ; WAV channel output on
+    ld [rAUDTERM],a
     ld a,$20                            ; don't divide waves
     ld [rAUD3LEVEL],a
     ld a,LOW(c4_freq)                   ; play C2 (low byte)
@@ -116,6 +119,7 @@ copy_wave
     ld a,(HIGH(c4_freq) & $07) | $80    ; play C2 (high byte) + some flags + trigger
     ld [rAUD3HIGH],a
 
+begin_wait_loop:
     ld b,10                             ; delay timers
     ldz
 
