@@ -1,6 +1,6 @@
-# gbsplash
+# retro19
 
-A simple splash screen for the 1989 Nintendo Game Boy (DMG-01). Should run on later models, too.
+Hacking more sound channels out of a 1989 Nintendo Gameboy. Our entry into the 2019 Retro Challenge.
 
 ## building
 
