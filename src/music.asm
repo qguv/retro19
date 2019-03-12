@@ -1,88 +1,154 @@
-c2_freq equ 44
-cs2_freq equ 156
-d2_freq equ 262
-ds2_freq equ 363
-e2_freq equ 457
-f2_freq equ 547
-fs2_freq equ 631
-g2_freq equ 710
-gs2_freq equ 786
-a2_freq equ 854
-as2_freq equ 923
-b2_freq equ 986
-c3_freq equ 1046
-cs3_freq equ 1102
-d3_freq equ 1155
-ds3_freq equ 1205
-e3_freq equ 1253
-f3_freq equ 1297
-fs3_freq equ 1339
-g3_freq equ 1379
-gs3_freq equ 1417
-a3_freq equ 1452
-as3_freq equ 1486
-b3_freq equ 1517
-c4_freq equ 1546
-cs4_freq equ 1575
-d4_freq equ 1602
-ds4_freq equ 1627
-e4_freq equ 1650
-f4_freq equ 1673
-fs4_freq equ 1694
-g4_freq equ 1714
-gs4_freq equ 1732
-a4_freq equ 1750
-as4_freq equ 1767
-b4_freq equ 1783
 
-	rsreset	; this is space-sensitive for literally no reason
-c2	rb 1
-cs2	rb 1
-d2	rb 1
-ds2	rb 1
-e2	rb 1
-f2	rb 1
-fs2	rb 1
-g2	rb 1
-gs2	rb 1
-a2	rb 1
-as2	rb 1
-b2	rb 1
-c3	rb 1
-cs3	rb 1
-d3	rb 1
-ds3	rb 1
-e3	rb 1
-f3	rb 1
-fs3	rb 1
-g3	rb 1
-gs3	rb 1
-a3	rb 1
-as3	rb 1
-b3	rb 1
-c4	rb 1
-cs4	rb 1
-d4	rb 1
-ds4	rb 1
-e4	rb 1
-f4	rb 1
-fs4	rb 1
-g4	rb 1
-gs4	rb 1
-a4	rb 1
-as4	rb 1
-b4	rb 1
-REST	rb 1
+    include "note_names.asm"
+    
+; Format Specification
 
-NoteFreqs
-	dw	c2_freq, cs2_freq, d2_freq, ds2_freq, \
-		e2_freq, f2_freq, fs2_freq, g2_freq, \
-		gs2_freq, a2_freq, as2_freq, b2_freq, \
-		c3_freq, cs3_freq, d3_freq, ds3_freq, \
-		e3_freq, f3_freq, fs3_freq, g3_freq, \
-		gs3_freq, a3_freq, as3_freq, b3_freq, \
-		c4_freq, cs4_freq, d4_freq, ds4_freq, \
-		e4_freq, f4_freq, fs4_freq, g4_freq, \
-		gs4_freq, a4_freq, as4_freq, b4_freq
+; Sequence - list of 16-bit pattern pointers, terminated with dw 0, followed
+; by loop point address
 
-; vim: se ft=rgbds:
+    dw ptn0
+    dw ptn1
+    dw ptn2
+    dw ptn3
+    dw ptn1
+loop_point
+    dw ptn1a
+    dw ptn2a
+    dw ptn3a
+    dw ptn1a
+    dw ptn1a
+    dw ptn2a
+    dw ptn3b
+    dw ptn1b
+    dw ptn10a
+    dw ptn20a
+    dw ptn30a
+    dw ptn10c
+    dw ptn10a
+    dw ptn20a
+    dw ptn30b
+    dw ptn10b
+    dw 0
+    dw loop_point
+
+; Patterns
+; byte  bit     function
+; 0             row length in ticks (# of VBLANKS)
+;               row length = 0 marks end of pattern
+; 1             control byte
+;       0       PU1_CH1 data follows
+;       1       PU1_CH2 data follows
+;       2       PU2_CH1 data follows
+;       3       PU2_CH2 data follows
+;       4       WAV data follows 
+;       5       NOI data follows
+;       7       player core swap (not implemented)
+; [div_pu1_ch1, div_pu1_ch2, div_pu2_ch1, div_pu2_ch2]
+
+
+ptn0
+    dw ((%00001111 << 8) | $20),c3,rest,rest,rest
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00000001 << 8) | $20),g3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn1
+    dw ((%00000011 << 8) | $20),c3,c2
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00000011 << 8) | $20),g3,g1
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn2
+    dw ((%00000011 << 8) | $20),c3,gs1
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00000001 << 8) | $20),g3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn3
+    dw ((%00000011 << 8) | $20),c3,gs1
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00000011 << 8) | $20),g3,g1
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn1a
+    dw ((%00111111 << 8) | $20),c3,c2,c1,g3,0,0,$7700,$8037
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00001111 << 8) | $20),g3,g1,g0,g3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn1b
+    dw ((%00101111 << 8) | $20),c3,c2,c1,c3,$7700,$8037
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00001111 << 8) | $20),g3,g1,g0,c3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn2a
+    dw ((%00001111 << 8) | $20),c3,gs1,gs0,f3
+    dw ((%00001001 << 8) | $20),ds3,ds3
+    dw ((%00000001 << 8) | $20),g3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn3a
+    dw ((%00101111 << 8) | $20),c3,gs1,gs0,g3,$7700,$8017
+    dw ((%00001001 << 8) | $20),ds3,f3
+    dw ((%00101111 << 8) | $20),g3,g1,g0,ds3,$7700,$8027
+    dw ((%00001001 << 8) | $20),b3,f3
+    db 0
+
+ptn3b
+    dw ((%00101111 << 8) | $20),c3,gs1,gs0,c3,$7700,$8017
+    dw ((%00001001 << 8) | $20),ds3,as2
+    dw ((%00101111 << 8) | $20),g3,g1,g0,c3,$7700,$8027
+    dw ((%00001001 << 8) | $20),b3,d3
+    db 0
+
+ptn10a
+    dw ((%00111111 << 8) | $20),c3,c2,c1,g3,$00a0,(gbds3 + $8000),$7700,$8037
+    dw ((%00010001 << 8) | $20),ds3,$00a0,(gbg3 + $8000)
+    dw ((%00011111 << 8) | $20),g3,g1,g0,g3,$00a0,(gbb3 + $8000)
+    dw ((%00010001 << 8) | $20),b3,$00a0,(gbc3 + $8000)
+    db 0
+
+ptn10c
+    dw ((%00111111 << 8) | $20),c3,c2,c1,g3,$00a0,(gbg3 + $8000),$7700,$8037
+    dw ((%00000001 << 8) | $10),ds3
+    dw ((%00010000 << 8) | $08),$00a0,(gbgs3 + $8000)
+    dw ((%00010000 << 8) | $08),$00a0,(gbg3 + $8000)
+    dw ((%00011111 << 8) | $20),g3,g1,g0,g3,$00a0,(gbf3 + $8000)
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn10b
+    dw ((%00111111 << 8) | $20),c3,c2,c1,c3,$00a0,(gbc3 + $8000),$7700,$8037
+    dw ((%00000001 << 8) | $20),ds3
+    dw ((%00001111 << 8) | $20),g3,g1,g0,c3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn20a
+    dw ((%00001111 << 8) | $20),c3,gs1,gs0,f3
+    dw ((%00001001 << 8) | $20),ds3,ds3
+    dw ((%00000001 << 8) | $20),g3
+    dw ((%00000001 << 8) | $20),b3
+    db 0
+
+ptn30a
+    dw ((%00111111 << 8) | $20),c3,gs1,gs0,g3,$00a0,(gbds3 + $8000),$7700,$8017
+    dw ((%00011001 << 8) | $20),ds3,f3,$00a0,(gbd3 + $8000)
+    dw ((%00111111 << 8) | $20),g3,g1,g0,ds3,$00a0,(gbds3 + $8000),$7700,$8027
+    dw ((%00011001 << 8) | $20),b3,f3,$00a0,(gbf3 + $8000)
+    db 0
+
+ptn30b
+    dw ((%00111111 << 8) | $20),c3,gs1,gs0,c3,$00a0,(gbc3 + $8000),$7700,$8017
+    dw ((%00011001 << 8) | $20),ds3,as2,$00a0,(gbas2 + $8000)
+    dw ((%00111111 << 8) | $20),g3,g1,g0,c3,$00a0,(gbc3 + $8000),$7700,$8027
+    dw ((%00011001 << 8) | $20),b3,d3,$00a0,(gbd3 + $8000)
+    db 0
