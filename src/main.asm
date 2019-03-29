@@ -24,7 +24,7 @@ PTN_PTR_HI          equ $84
 
 
     section "vblank_intvec",ROM0[$0040]
-    
+
     ldh a,[ROW_LENGTH_COUNTER]
     dec a
     ldh [ROW_LENGTH_COUNTER],a
@@ -33,12 +33,12 @@ PTN_PTR_HI          equ $84
 
 
     section "timer_intvec",ROM0[$0050]
-    
+
     jp player_target_org
 
 
     section "entry_point",ROM0[$0100]
-    
+
     nop
     jp start
 
@@ -185,7 +185,7 @@ update_sound                        ; calculate next sound frame
 end_update_sound
 
 
-init_ptrs    
+init_ptrs
     ld a,(music_data & $ff)
     ldh [SEQ_PTR_LO],a
     ld a,(music_data >> 8)
@@ -253,7 +253,7 @@ read_ptn                            ; update pattern ptr
 .no_reset_pu1_ch2
     rr e
     jr nc,.no_reset_pu2_ch1
-    
+
     ld a,[hl+]
     ld [PU2_CH1_DIV_LO],a
     ld a,[hl+]
@@ -275,7 +275,7 @@ read_ptn                            ; update pattern ptr
 .no_reset_pu2_ch2
     rr e
     jr nc,.no_wav_update
-    
+
     ld a,[hl+]
     ldh [$1c],a
     ldh [$1a],a
@@ -289,7 +289,7 @@ read_ptn                            ; update pattern ptr
 .no_wav_update
     rr e
     jr nc,.no_noise_update
-    
+
     ld a,[hl+]
     ldh [$20],a
     ld a,[hl+]
@@ -312,5 +312,5 @@ tri_wave                                        ; well, sort of ;)
     db $cb,$a9,$88,$76,$54,$33,$21,$10
 
 music_data
-    include "music.asm"
+    include "src/music.asm"
 

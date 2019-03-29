@@ -1,6 +1,6 @@
 
-    include "note_names.asm"
-    
+    include "src/note_names.asm"
+
 ; Format Specification
 
 ; Sequence - list of 16-bit pattern pointers, terminated with dw 0, followed
@@ -40,7 +40,7 @@ loop_point
 ;       1       PU1_CH2 data follows
 ;       2       PU2_CH1 data follows
 ;       3       PU2_CH2 data follows
-;       4       WAV data follows 
+;       4       WAV data follows
 ;       5       NOI data follows
 ;       7       player core swap (not implemented)
 ; [div_pu1_ch1, div_pu1_ch2, div_pu2_ch1, div_pu2_ch2]
