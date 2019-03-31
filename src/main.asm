@@ -1,4 +1,3 @@
-
 player_target_org   equ $c000
 PU1_CH1_DIV_LO      equs "player_target_org + (_pu1_ch1_div - update_sound) + 1"
 PU1_CH1_DIV_HI      equs "player_target_org + (_pu1_ch1_div - update_sound) + 2"
@@ -77,8 +76,8 @@ copy_wave
 init_sound
     ld a,$77
     ldh [$24],a                     ; L/R master volume = max
-    ld a,%11111111
-    ldh [$25],a                     ; all channels L/R on
+    ld a,%10111101
+    ldh [$25],a                     ; PU1 and NOI on both, PU2 on left, WAV on right
     xor a
     ldh [$12],a                     ; PU1/2 Volume 0
     ldh [$17],a
@@ -130,38 +129,52 @@ update_sound                        ; calculate next sound frame
     push af
 
 _pu1_ch1_div
-    ld de,0                         ; PU1_CH1_DIV equ @ + 1
+    ld de,0                         ; location of imm value 0 in code is rewritten every frame
 _pu1_ch1_state
-    ld hl,0                         ; PU1_CH1_STATE equ @ + 1
+    ld hl,0                         ; location of imm value 0 in code is rewritten every frame
     add hl,de                       ; PU1_CH1_STATE += PU1_CH1_DIV
     ld a,l
     ld [PU1_CH1_STATE_LO],a
     ld a,h
     ld [PU1_CH1_STATE_HI],a
 
+; like above, but for the second software channel on PU1
 _pu1_ch2_div
-    ld de,0                         ; PU1_CH2_DIV equ @ + 1
+    ld de,0                         ; location of imm value 0 in code is rewritten every frame
 _pu1_ch2_state
-    ld hl,0                         ; PU1_CH2_STATE equ @ + 1
+    ld hl,0                         ; location of imm value 0 in code is rewritten every frame
     add hl,de                       ; PU1_CH2_STATE += PU1_CH1_DIV
     ld a,l
     ld [PU1_CH2_STATE_LO],a
     ld a,h
     ld [PU1_CH2_STATE_HI],a
 
-    ld a,[PU1_CH1_STATE_HI]         ; PU1 frame volume = CH1_STATE + CH2_STATE
-    add h
-    rra                             ; frame volume /= 2
-    and $f0
+; index each software channel in wavetable, then combine the two channels into PU1
+    ld hl,puvol_sin                 ; calculate wavetable address
+    add a,l                         ; add HL and the ch2 level
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a
+    ld b,[hl]                       ; and get the new level from the table
+    ld hl,puvol_sin                 ; calculate wavetable address
+    ld a,[PU1_CH1_STATE_HI]         ; fetch the current ch1 level
+    add a,l                         ; add HL and the ch1 level
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a
+    ld a,[hl]                       ; and get the new level from the table
+    add b                           ; combine the two channels
     ldh [$12],a                     ; set volume reg
     ld a,$87
     ldh [$14],a                     ; restart sound
 
 
 _pu2_ch1_div
-    ld de,0                         ; PU2_CH1_DIV equ @ + 1
+    ld de,0                         ; location of imm value 0 in code is rewritten every frame
 _pu2_ch1_state
-    ld hl,0                         ; PU2_CH1_STATE equ @ + 1
+    ld hl,0                         ; location of imm value 0 in code is rewritten every frame
     add hl,de                       ; PU2_CH1_STATE += PU2_CH1_DIV
     ld a,l
     ld [PU2_CH1_STATE_LO],a
@@ -169,19 +182,32 @@ _pu2_ch1_state
     ld [PU2_CH1_STATE_HI],a
 
 _pu2_ch2_div
-    ld de,0                         ; PU2_CH2_DIV equ @ + 1
+    ld de,0                         ; location of imm value 0 in code is rewritten every frame
 _pu2_ch2_state
-    ld hl,0                         ; PU2_CH2_STATE equ @ + 1
+    ld hl,0                         ; location of imm value 0 in code is rewritten every frame
     add hl,de                       ; PU2_CH2_STATE += PU2_CH1_DIV
     ld a,l
     ld [PU2_CH2_STATE_LO],a
     ld a,h
     ld [PU2_CH2_STATE_HI],a
 
-    ld a,[PU2_CH1_STATE_HI]         ; PU2 frame volume = CH1_STATE + CH2_STATE
-    add h
-    rra                             ; frame volume /= 2
-    and $f0
+; index each software channel in wavetable, then combine the two channels into PU1
+    ld hl,puvol_sin                 ; calculate wavetable address
+    add a,l                         ; add HL and the ch2 level
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a
+    ld b,[hl]                       ; and get the new level from the table
+    ld hl,puvol_sin                 ; calculate wavetable address
+    ld a,[PU2_CH1_STATE_HI]         ; fetch the current ch1 level
+    add a,l                         ; add HL and the ch1 level
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a
+    ld a,[hl]                       ; and get the new level from the table
+    add b                           ; combine the two channels
     ldh [$17],a                     ; set volume reg
     ld a,$87
     ldh [$19],a                     ; restart sound
@@ -322,3 +348,57 @@ tri_wave                                        ; well, sort of ;)
 music_data
     include "src/music.asm"
 
+; creates a 256-byte balanced sine table for PU* volume/envelope values, from $10 t/m $70 in increments of $10
+puvol_sin
+angle   set   0.0
+        rept  256
+        ; adding 3.0 to get from [-3, 3] to [0, 6]
+        ; adding 1.0 to get from [0, 6] to [1, 7]
+        ; adding 0.5 to get from [1, 7] to [1.5, 7.5] because ints are floored
+        ; this provides a sufficiently balanced sin with a nice linger at 1 and 7
+        ; we're right shifting 16 (yes) times to deal with fixed point decimal numbers
+        ; we're then leftshifting 4 times to put the low nybble high
+        ; (these last two steps implemented as (>>12 & $f0) for compile efficiency)
+        db    (mul(3.0, sin(angle)) + 3.0 + 1.0 + 0.5)>>12 & $f0
+angle   set angle+256.0
+        endr
+
+;         |min              |med              |max
+; 0___| 1_L_| 2___| 3___| 4_L_| 5___| 6___| 7_L_|
+;                           |
+;                        |
+;                     |
+;                  |
+;               |
+;             |
+;           |
+;          |
+; 0___| 1___| 2___| 3___| 4___| 5___| 6___| 7___|
+;          |
+;           |
+;             |
+;               |
+;                  |
+;                     |
+;                        |
+;                           |
+; 0___| 1___| 2___| 3___| 4___| 5___| 6___| 7___|
+;                              |
+;                                 |
+;                                    |
+;                                       |
+;                                         |
+;                                           |
+;                                            |
+;                                             |
+; 0___| 1___| 2___| 3___| 4___| 5___| 6___| 7___|
+;                                             |
+;                                            |
+;                                           |
+;                                         |
+;                                       |
+;                                    |
+;                                 |
+;                              |
+;                           |
+; 0___| 1___| 2___| 3___| 4___| 5___| 6___| 7___|
