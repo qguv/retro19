@@ -1,21 +1,21 @@
 
 player_target_org   equ $c000
-PU1_CH1_DIV_LO      equ (player_target_org + 4)
-PU1_CH1_DIV_HI      equ (player_target_org + 5)
-PU1_CH1_STATE_LO    equ (player_target_org + 7)
-PU1_CH1_STATE_HI    equ (player_target_org + 8)
-PU1_CH2_DIV_LO      equ (player_target_org + 19)
-PU1_CH2_DIV_HI      equ (player_target_org + 20)
-PU1_CH2_STATE_LO    equ (player_target_org + 22)
-PU1_CH2_STATE_HI    equ (player_target_org + 23)
-PU2_CH1_DIV_LO      equ (player_target_org + 47)
-PU2_CH1_DIV_HI      equ (player_target_org + 48)
-PU2_CH1_STATE_LO    equ (player_target_org + 50)
-PU2_CH1_STATE_HI    equ (player_target_org + 51)
-PU2_CH2_DIV_LO      equ (player_target_org + 62)
-PU2_CH2_DIV_HI      equ (player_target_org + 63)
-PU2_CH2_STATE_LO    equ (player_target_org + 65)
-PU2_CH2_STATE_HI    equ (player_target_org + 66)
+PU1_CH1_DIV_LO      equs "player_target_org + (_pu1_ch1_div - update_sound) + 1"
+PU1_CH1_DIV_HI      equs "player_target_org + (_pu1_ch1_div - update_sound) + 2"
+PU1_CH1_STATE_LO    equs "player_target_org + (_pu1_ch1_state - update_sound) + 1"
+PU1_CH1_STATE_HI    equs "player_target_org + (_pu1_ch1_state - update_sound) + 2"
+PU1_CH2_DIV_LO      equs "player_target_org + (_pu1_ch2_div - update_sound) + 1"
+PU1_CH2_DIV_HI      equs "player_target_org + (_pu1_ch2_div - update_sound) + 2"
+PU1_CH2_STATE_LO    equs "player_target_org + (_pu1_ch2_state - update_sound) + 1"
+PU1_CH2_STATE_HI    equs "player_target_org + (_pu1_ch2_state - update_sound) + 2"
+PU2_CH1_DIV_LO      equs "player_target_org + (_pu2_ch1_div - update_sound) + 1"
+PU2_CH1_DIV_HI      equs "player_target_org + (_pu2_ch1_div - update_sound) + 2"
+PU2_CH1_STATE_LO    equs "player_target_org + (_pu2_ch1_state - update_sound) + 1"
+PU2_CH1_STATE_HI    equs "player_target_org + (_pu2_ch1_state - update_sound) + 2"
+PU2_CH2_DIV_LO      equs "player_target_org + (_pu2_ch2_div - update_sound) + 1"
+PU2_CH2_DIV_HI      equs "player_target_org + (_pu2_ch2_div - update_sound) + 2"
+PU2_CH2_STATE_LO    equs "player_target_org + (_pu2_ch2_state - update_sound) + 1"
+PU2_CH2_STATE_HI    equs "player_target_org + (_pu2_ch2_state - update_sound) + 2"
 ROW_LENGTH_COUNTER  equ $80
 SEQ_PTR_LO          equ $81
 SEQ_PTR_HI          equ $82
@@ -129,15 +129,19 @@ update_sound                        ; calculate next sound frame
     push de
     push af
 
+_pu1_ch1_div
     ld de,0                         ; PU1_CH1_DIV equ @ + 1
-    ld hl,0                         ; PU1_CH2_STATE equ @ + 1
-    add hl,de                       ; PU1_CH2_STATE += PU1_CH1_DIV
+_pu1_ch1_state
+    ld hl,0                         ; PU1_CH1_STATE equ @ + 1
+    add hl,de                       ; PU1_CH1_STATE += PU1_CH1_DIV
     ld a,l
     ld [PU1_CH1_STATE_LO],a
     ld a,h
     ld [PU1_CH1_STATE_HI],a
 
+_pu1_ch2_div
     ld de,0                         ; PU1_CH2_DIV equ @ + 1
+_pu1_ch2_state
     ld hl,0                         ; PU1_CH2_STATE equ @ + 1
     add hl,de                       ; PU1_CH2_STATE += PU1_CH1_DIV
     ld a,l
@@ -154,15 +158,19 @@ update_sound                        ; calculate next sound frame
     ldh [$14],a                     ; restart sound
 
 
+_pu2_ch1_div
     ld de,0                         ; PU2_CH1_DIV equ @ + 1
-    ld hl,0                         ; PU2_CH2_STATE equ @ + 1
-    add hl,de                       ; PU2_CH2_STATE += PU2_CH1_DIV
+_pu2_ch1_state
+    ld hl,0                         ; PU2_CH1_STATE equ @ + 1
+    add hl,de                       ; PU2_CH1_STATE += PU2_CH1_DIV
     ld a,l
     ld [PU2_CH1_STATE_LO],a
     ld a,h
     ld [PU2_CH1_STATE_HI],a
 
+_pu2_ch2_div
     ld de,0                         ; PU2_CH2_DIV equ @ + 1
+_pu2_ch2_state
     ld hl,0                         ; PU2_CH2_STATE equ @ + 1
     add hl,de                       ; PU2_CH2_STATE += PU2_CH1_DIV
     ld a,l
